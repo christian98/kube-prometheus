@@ -16,6 +16,15 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
 
     nodeExporter+:: {
       port: 9100,
+      labels: {
+        'app.kubernetes.io/name': 'node-exporter',
+        'app.kubernetes.io/version': $._config.versions.nodeExporter,
+      },
+      selectorLabels: {
+        [labelName]: $._config.nodeExporter.labels[labelName]
+        for labelName in std.objectFields($._config.nodeExporter.labels)
+        if !std.setMember(labelName, ['app.kubernetes.io/version'])
+      },
     },
   },
 
@@ -64,7 +73,8 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
       local toleration = daemonset.mixin.spec.template.spec.tolerationsType;
       local containerEnv = container.envType;
 
-      local podLabels = { app: 'node-exporter' };
+      local podLabels = $._config.nodeExporter.labels;
+      local selectorLabels = $._config.nodeExporter.selectorLabels;
 
       local existsToleration = toleration.new() +
                                toleration.withOperator('Exists');
@@ -89,7 +99,8 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
           '--path.procfs=/host/proc',
           '--path.sysfs=/host/sys',
           '--path.rootfs=/host/root',
-
+          '--no-collector.wifi',
+          '--no-collector.hwmon',
           // The following settings have been taken from
           // https://github.com/prometheus/node_exporter/blob/0662673/collector/filesystem_linux.go#L30-L31
           // Once node exporter is being released with those settings, this can be removed.
@@ -128,7 +139,7 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
       daemonset.mixin.metadata.withName('node-exporter') +
       daemonset.mixin.metadata.withNamespace($._config.namespace) +
       daemonset.mixin.metadata.withLabels(podLabels) +
-      daemonset.mixin.spec.selector.withMatchLabels(podLabels) +
+      daemonset.mixin.spec.selector.withMatchLabels(selectorLabels) +
       daemonset.mixin.spec.template.metadata.withLabels(podLabels) +
       daemonset.mixin.spec.template.spec.withTolerations([existsToleration]) +
       daemonset.mixin.spec.template.spec.withNodeSelector({ 'kubernetes.io/os': 'linux' }) +
@@ -153,16 +164,12 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
         metadata: {
           name: 'node-exporter',
           namespace: $._config.namespace,
-          labels: {
-            'k8s-app': 'node-exporter',
-          },
+          labels: $._config.nodeExporter.labels,
         },
         spec: {
-          jobLabel: 'k8s-app',
+          jobLabel: 'app.kubernetes.io/name',
           selector: {
-            matchLabels: {
-              'k8s-app': 'node-exporter',
-            },
+            matchLabels: $._config.nodeExporter.selectorLabels,
           },
           endpoints: [
             {
@@ -193,9 +200,9 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
 
       local nodeExporterPort = servicePort.newNamed('https', $._config.nodeExporter.port, 'https');
 
-      service.new('node-exporter', $.nodeExporter.daemonset.spec.selector.matchLabels, nodeExporterPort) +
+      service.new('node-exporter', $._config.nodeExporter.selectorLabels, nodeExporterPort) +
       service.mixin.metadata.withNamespace($._config.namespace) +
-      service.mixin.metadata.withLabels({ 'k8s-app': 'node-exporter' }) +
+      service.mixin.metadata.withLabels($._config.nodeExporter.labels) +
       service.mixin.spec.withClusterIp('None'),
   },
 }

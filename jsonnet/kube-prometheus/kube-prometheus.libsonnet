@@ -4,6 +4,7 @@ local configMapList = k3.core.v1.configMapList;
 
 (import 'grafana/grafana.libsonnet') +
 (import 'kube-state-metrics/kube-state-metrics.libsonnet') +
+(import 'kube-state-metrics-mixin/mixin.libsonnet') +
 (import 'node-exporter/node-exporter.libsonnet') +
 (import 'node-mixin/mixin.libsonnet') +
 (import 'alertmanager/alertmanager.libsonnet') +
@@ -17,6 +18,94 @@ local configMapList = k3.core.v1.configMapList;
   kubePrometheus+:: {
     namespace: k.core.v1.namespace.new($._config.namespace),
   },
+  prometheusOperator+::
+  {
+    '0alertmanagerCustomResourceDefinition'+: {
+      spec: std.mergePatch(super.spec, {
+        preserveUnknownFields: null,
+      }),
+    },
+    '0prometheusCustomResourceDefinition'+: {
+      spec: std.mergePatch(super.spec, {
+        preserveUnknownFields: null,
+      }),
+    },
+    '0servicemonitorCustomResourceDefinition'+: {
+      spec: std.mergePatch(super.spec, {
+        preserveUnknownFields: null,
+      }),
+    },
+    '0podmonitorCustomResourceDefinition'+: {
+      spec: std.mergePatch(super.spec, {
+        preserveUnknownFields: null,
+      }),
+    },
+    '0prometheusruleCustomResourceDefinition'+: {
+      spec: std.mergePatch(super.spec, {
+        preserveUnknownFields: null,
+      }),
+    },
+    '0thanosrulerCustomResourceDefinition'+: {
+      spec: std.mergePatch(super.spec, {
+        preserveUnknownFields: null,
+      }),
+    },
+    service+: {
+      spec+: {
+        ports: [
+          {
+            name: 'https',
+            port: 8443,
+            targetPort: 'https',
+          },
+        ],
+      },
+    },
+    serviceMonitor+: {
+      spec+: {
+        endpoints: [
+          {
+            port: 'https',
+            scheme: 'https',
+            honorLabels: true,
+            bearerTokenFile: '/var/run/secrets/kubernetes.io/serviceaccount/token',
+            tlsConfig: {
+              insecureSkipVerify: true,
+            },
+          },
+        ]
+      },
+    },
+    clusterRole+: {
+      rules+: [
+        {
+          apiGroups: ['authentication.k8s.io'],
+          resources: ['tokenreviews'],
+          verbs: ['create'],
+        },
+        {
+          apiGroups: ['authorization.k8s.io'],
+          resources: ['subjectaccessreviews'],
+          verbs: ['create'],
+        },
+      ],
+    },
+  } +
+  ((import 'kube-prometheus/kube-rbac-proxy/container.libsonnet') {
+    config+:: {
+      kubeRbacProxy: {
+        local cfg = self,
+        image: $._config.imageRepos.kubeRbacProxy + ':' + $._config.versions.kubeRbacProxy,
+        name: 'kube-rbac-proxy',
+        securePortName: 'https',
+        securePort: 8443,
+        secureListenAddress: ':%d' % self.securePort,
+        upstream: 'http://127.0.0.1:8080/',
+        tlsCipherSuites: $._config.tlsCipherSuites,
+      },
+    },
+  }).deploymentMixin,
+
   grafana+:: {
     dashboardDefinitions: configMapList.new(super.dashboardDefinitions),
     serviceMonitor: {
@@ -46,7 +135,7 @@ local configMapList = k3.core.v1.configMapList;
     namespace: 'default',
 
     versions+:: {
-      grafana: '6.4.3',
+      grafana: '6.6.0',
     },
 
     tlsCipherSuites: [
@@ -82,6 +171,7 @@ local configMapList = k3.core.v1.configMapList;
     kubeletSelector: 'job="kubelet", metrics_path="/metrics"',
     kubeStateMetricsSelector: 'job="kube-state-metrics"',
     nodeExporterSelector: 'job="node-exporter"',
+    fsSpaceFillingUpCriticalThreshold: 15,
     notKubeDnsSelector: 'job!="kube-dns"',
     kubeSchedulerSelector: 'job="kube-scheduler"',
     kubeControllerManagerSelector: 'job="kube-controller-manager"',

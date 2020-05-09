@@ -5,7 +5,7 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
     namespace: 'default',
 
     versions+:: {
-      prometheusAdapter: 'v0.5.0',
+      prometheusAdapter: 'v0.7.0',
     },
 
     imageRepos+:: {
@@ -16,34 +16,47 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
       name: 'prometheus-adapter',
       labels: { name: $._config.prometheusAdapter.name },
       prometheusURL: 'http://prometheus-' + $._config.prometheus.name + '.' + $._config.namespace + '.svc:9090/',
-      config: |||
-        resourceRules:
-          cpu:
-            containerQuery: sum(rate(container_cpu_usage_seconds_total{<<.LabelMatchers>>,container!="POD",container!="",pod!=""}[5m])) by (<<.GroupBy>>)
-            nodeQuery: sum(1 - rate(node_cpu_seconds_total{mode="idle"}[5m]) * on(namespace, pod) group_left(node) node_namespace_pod:kube_pod_info:{<<.LabelMatchers>>}) by (<<.GroupBy>>)
-            resources:
-              overrides:
-                node:
-                  resource: node
-                namespace:
-                  resource: namespace
-                pod:
-                  resource: pod
-            containerLabel: container
-          memory:
-            containerQuery: sum(container_memory_working_set_bytes{<<.LabelMatchers>>,container!="POD",container!="",pod!=""}) by (<<.GroupBy>>)
-            nodeQuery: sum(node_memory_MemTotal_bytes{job="node-exporter",<<.LabelMatchers>>} - node_memory_MemAvailable_bytes{job="node-exporter",<<.LabelMatchers>>}) by (<<.GroupBy>>)
-            resources:
-              overrides:
-                instance:
-                  resource: node
-                namespace:
-                  resource: namespace
-                pod:
-                  resource: pod
-            containerLabel: container
-          window: 5m
-      |||,
+      config: {
+        resourceRules: {
+          cpu: {
+            containerQuery: 'sum(irate(container_cpu_usage_seconds_total{<<.LabelMatchers>>,container!="POD",container!="",pod!=""}[5m])) by (<<.GroupBy>>)',
+            nodeQuery: 'sum(1 - irate(node_cpu_seconds_total{mode="idle"}[5m]) * on(namespace, pod) group_left(node) node_namespace_pod:kube_pod_info:{<<.LabelMatchers>>}) by (<<.GroupBy>>)',
+            resources: {
+              overrides: {
+                node: {
+                  resource: 'node'
+                },
+                namespace: {
+                  resource: 'namespace'
+                },
+                pod: {
+                  resource: 'pod'
+                },
+              },
+            },
+            containerLabel: 'container'
+          },
+          memory: {
+            containerQuery: 'sum(container_memory_working_set_bytes{<<.LabelMatchers>>,container!="POD",container!="",pod!=""}) by (<<.GroupBy>>)',
+            nodeQuery: 'sum(node_memory_MemTotal_bytes{job="node-exporter",<<.LabelMatchers>>} - node_memory_MemAvailable_bytes{job="node-exporter",<<.LabelMatchers>>}) by (<<.GroupBy>>)',
+            resources: {
+              overrides: {
+                instance: {
+                  resource: 'node'
+                },
+                namespace: {
+                  resource: 'namespace'
+                },
+                pod: {
+                  resource: 'pod'
+                },
+              },
+            },
+            containerLabel: 'container'
+          },
+          window: '5m',
+        },
+      }
     },
   },
 
@@ -70,8 +83,8 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
 
     configMap:
       local configmap = k.core.v1.configMap;
+      configmap.new('adapter-config', { 'config.yaml': std.manifestYamlDoc($._config.prometheusAdapter.config) }) +
 
-      configmap.new('adapter-config', { 'config.yaml': $._config.prometheusAdapter.config }) +
       configmap.mixin.metadata.withNamespace($._config.namespace),
 
     service:
@@ -191,7 +204,7 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
       local rules =
         policyRule.new() +
         policyRule.withApiGroups(['metrics.k8s.io']) +
-        policyRule.withResources(['pods']) +
+        policyRule.withResources(['pods', 'nodes']) +
         policyRule.withVerbs(['get','list','watch']);
 
       clusterRole.new() +

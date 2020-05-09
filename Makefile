@@ -1,60 +1,55 @@
-JSONNET_ARGS := -n 2 --max-blank-lines 2 --string-style s --comment-style s
-ifneq (,$(shell which jsonnetfmt))
-	JSONNET_FMT_CMD := jsonnetfmt
-else
-	JSONNET_FMT_CMD := jsonnet
-	JSONNET_FMT_ARGS := fmt $(JSONNET_ARGS)
-endif
-JSONNET_FMT := $(JSONNET_FMT_CMD) $(JSONNET_FMT_ARGS)
+SHELL=/bin/bash -o pipefail
 
-JB_BINARY := jb
-EMBEDMD_BINARY := embedmd
-CONTAINER_CMD:=docker run --rm \
-		-e http_proxy -e https_proxy -e no_proxy \
-		-u="$(shell id -u):$(shell id -g)" \
-		-v "$(shell go env GOCACHE):/.cache/go-build" \
-		-v "$(PWD):/go/src/github.com/coreos/kube-prometheus:Z" \
-		-w "/go/src/github.com/coreos/kube-prometheus" \
-		quay.io/coreos/jsonnet-ci
+export GO111MODULE=on
+
+BIN_DIR?=$(shell pwd)/tmp/bin
+
+EMBEDMD_BIN=$(BIN_DIR)/embedmd
+JB_BIN=$(BIN_DIR)/jb
+GOJSONTOYAML_BIN=$(BIN_DIR)/gojsontoyaml
+JSONNET_BIN=$(BIN_DIR)/jsonnet
+JSONNETFMT_BIN=$(BIN_DIR)/jsonnetfmt
+TOOLING=$(EMBEDMD_BIN) $(JB_BIN) $(GOJSONTOYAML_BIN) $(JSONNET_BIN) $(JSONNETFMT_BIN)
+
+JSONNETFMT_ARGS=-n 2 --max-blank-lines 2 --string-style s --comment-style s
 
 all: generate fmt test
-
-.PHONY: generate-in-docker
-generate-in-docker:
-	@echo ">> Compiling assets and generating Kubernetes manifests"
-	$(CONTAINER_CMD) make $(MFLAGS) generate
 
 .PHONY: clean
 clean:
 	# Remove all files and directories ignored by git.
 	git clean -Xfd .
 
+.PHONY: generate
 generate: manifests **.md
 
-**.md: $(shell find examples) build.sh example.jsonnet
-	$(EMBEDMD_BINARY) -w `find . -name "*.md" | grep -v vendor`
+**.md: $(EMBEDMD_BIN) $(shell find examples) build.sh example.jsonnet
+	$(EMBEDMD_BIN) -w `find . -name "*.md" | grep -v vendor`
 
-manifests: examples/kustomize.jsonnet vendor build.sh
-	rm -rf manifests
+manifests: examples/kustomize.jsonnet $(GOJSONTOYAML_BIN) vendor build.sh
 	./build.sh $<
 
-vendor: jsonnetfile.json jsonnetfile.lock.json
+vendor: $(JB_BIN) jsonnetfile.json jsonnetfile.lock.json
 	rm -rf vendor
-	$(JB_BINARY) install
+	$(JB_BIN) install
 
-fmt:
+.PHONY: fmt
+fmt: $(JSONNETFMT_BIN)
 	find . -name 'vendor' -prune -o -name '*.libsonnet' -o -name '*.jsonnet' -print | \
-		xargs -n 1 -- $(JSONNET_FMT) -i
+		xargs -n 1 -- $(JSONNETFMT_BIN) $(JSONNETFMT_ARGS) -i
 
-test:
-	$(JB_BINARY) install
+.PHONY: test
+test: $(JB_BIN)
+	$(JB_BIN) install
 	./test.sh
 
+.PHONY: test-e2e
 test-e2e:
 	go test -timeout 55m -v ./tests/e2e -count=1
 
-test-in-docker:
-	@echo ">> Compiling assets and generating Kubernetes manifests"
-	$(CONTAINER_CMD) make $(MFLAGS) test
+$(BIN_DIR):
+	mkdir -p $(BIN_DIR)
 
-.PHONY: generate generate-in-docker test test-in-docker fmt
+$(TOOLING): $(BIN_DIR)
+	@echo Installing tools from scripts/tools.go
+	@cat scripts/tools.go | grep _ | awk -F'"' '{print $$2}' | GOBIN=$(BIN_DIR) xargs -tI % go install %

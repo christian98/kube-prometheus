@@ -6,7 +6,7 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
     namespace: 'default',
 
     versions+:: {
-      prometheus: 'v2.11.0',
+      prometheus: 'v2.17.2',
     },
 
     imageRepos+:: {
@@ -178,7 +178,7 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
         spec: {
           replicas: p.replicas,
           version: $._config.versions.prometheus,
-          baseImage: $._config.imageRepos.prometheus,
+          image: $._config.imageRepos.prometheus + ':' + $._config.versions.prometheus,
           serviceAccountName: 'prometheus-' + p.name,
           serviceMonitorSelector: {},
           podMonitorSelector: {},
@@ -418,6 +418,11 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
                 {
                   sourceLabels: ['__name__'],
                   regex: 'apiserver_admission_step_admission_latencies_seconds_.*',
+                  action: 'drop',
+                },
+                {
+                  sourceLabels: ['__name__', 'le'],
+                  regex: 'apiserver_request_duration_seconds_bucket;(0.15|0.25|0.3|0.35|0.4|0.45|0.6|0.7|0.8|0.9|1.25|1.5|1.75|2.5|3|3.5|4.5|6|7|8|9|15|25|30|50)',
                   action: 'drop',
                 },
               ],

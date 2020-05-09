@@ -1,51 +1,57 @@
 {
+  "version": 1,
   "dependencies": [
     {
-      "name": "etcd-mixin",
-      "source": {
-        "git": {
-          "remote": "https://github.com/coreos/etcd",
-          "subdir": "Documentation/etcd-mixin"
-        }
-      },
-      "version": "5770a6d286fe48682e29b54ce0df37e7d24b3280",
-      "sum": "Ko3qhNfC2vN/houLh6C0Ryacjv70gl0DVPGU/PQ4OD0="
-    },
-    {
-      "name": "grafana",
       "source": {
         "git": {
           "remote": "https://github.com/brancz/kubernetes-grafana",
           "subdir": "grafana"
         }
       },
-      "version": "539a90dbf63c812ad0194d8078dd776868a11c81",
-      "sum": "b8faWX1qqLGyN67sA36oRqYZ5HX+tHBRMPtrWRqIysE="
+      "version": "57b4365eacda291b82e0d55ba7eec573a8198dda",
+      "sum": "92DWADwGjnCfpZaL7Q07C0GZayxBziGla/O03qWea34="
     },
     {
-      "name": "grafana-builder",
       "source": {
         "git": {
-          "remote": "https://github.com/grafana/jsonnet-libs",
-          "subdir": "grafana-builder"
+          "remote": "https://github.com/coreos/etcd",
+          "subdir": "Documentation/etcd-mixin"
         }
       },
-      "version": "676ff4b4fe9135f85a5d6e30523d64d2d3713087",
-      "sum": "ELsYwK+kGdzX1mee2Yy+/b2mdO4Y503BOCDkFzwmGbE="
+      "version": "1166b1f195efae31439c7b3c913b4ef02e7df889",
+      "sum": "Ko3qhNfC2vN/houLh6C0Ryacjv70gl0DVPGU/PQ4OD0="
     },
     {
-      "name": "grafonnet",
+      "source": {
+        "git": {
+          "remote": "https://github.com/coreos/prometheus-operator",
+          "subdir": "jsonnet/prometheus-operator"
+        }
+      },
+      "version": "00cbd4911f931380cf9e19d771d7ebae1ec0a807",
+      "sum": "PfB8G2nfy3e/BrXS1ayymsRRFJvQLWT+oY5aqLS0tE8="
+    },
+    {
       "source": {
         "git": {
           "remote": "https://github.com/grafana/grafonnet-lib",
           "subdir": "grafonnet"
         }
       },
-      "version": "f3ee1d810858cf556d25f045b53cb0f1fd10b94e",
-      "sum": "14YBZUP/cl8qi9u86xiuUS4eXQrEAam+4GSg6i9n9Ys="
+      "version": "906768d46973e022594d3f03d82c5a51d86de2cc",
+      "sum": "J3Vp0EVbxTObr6KydLXsi4Rc0ssNVAEuwLc0NQ+4wqU="
     },
     {
-      "name": "ksonnet",
+      "source": {
+        "git": {
+          "remote": "https://github.com/grafana/jsonnet-libs",
+          "subdir": "grafana-builder"
+        }
+      },
+      "version": "cb6bc2780a39afbbf9d4ee64fec8d1152023aee9",
+      "sum": "slxrtftVDiTlQK22ertdfrg4Epnq97gdrLI63ftUfaE="
+    },
+    {
       "source": {
         "git": {
           "remote": "https://github.com/ksonnet/ksonnet-lib",
@@ -53,82 +59,78 @@
         }
       },
       "version": "0d2f82676817bbf9e4acf6495b2090205f323b9f",
-      "sum": "h28BXZ7+vczxYJ2sCt8JuR9+yznRtU/iA6DCpQUrtEg="
+      "sum": "h28BXZ7+vczxYJ2sCt8JuR9+yznRtU/iA6DCpQUrtEg=",
+      "name": "ksonnet"
     },
     {
-      "name": "kube-prometheus",
-      "source": {
-        "local": {
-          "directory": "jsonnet/kube-prometheus"
-        }
-      },
-      "version": ""
-    },
-    {
-      "name": "kubernetes-mixin",
       "source": {
         "git": {
           "remote": "https://github.com/kubernetes-monitoring/kubernetes-mixin",
           "subdir": ""
         }
       },
-      "version": "a7ee9d1abe1b1a3670a02ede1135cadb660b9d0c",
-      "sum": "bFGN7aEnh4Hs+tkuRkmlWboht0RWt38qy+Y4gGS+pa0="
+      "version": "3cc34f995c31ed6e1e92024fed1912d63569c39f",
+      "sum": "r5Fg4KgiBtsFPCCHtM3Cb4CEgnizLyK97srDNAcjr+Y="
     },
     {
-      "name": "node-mixin",
-      "source": {
-        "git": {
-          "remote": "https://github.com/prometheus/node_exporter",
-          "subdir": "docs/node-mixin"
-        }
-      },
-      "version": "2cae917bb7e0b6379221e8a24da012b16e63d661",
-      "sum": "7vEamDTP9AApeiF4Zu9ZyXzDIs3rYHzwf9k7g8X+wsg="
-    },
-    {
-      "name": "prometheus",
-      "source": {
-        "git": {
-          "remote": "https://github.com/prometheus/prometheus",
-          "subdir": "documentation/prometheus-mixin"
-        }
-      },
-      "version": "31700a05df64c2b4e32bb0ecd8baa25279144778",
-      "sum": "/cohvDTaIiLElG66tKeQsi4v1M9mlGDKjOBSWivL9TU="
-    },
-    {
-      "name": "prometheus-operator",
-      "source": {
-        "git": {
-          "remote": "https://github.com/coreos/prometheus-operator",
-          "subdir": "jsonnet/prometheus-operator"
-        }
-      },
-      "version": "8d44e0990230144177f97cf62ae4f43b1c4e3168",
-      "sum": "5U7/8MD3pF9O0YDTtUhg4vctkUBRVFxZxWUyhtNiBM8="
-    },
-    {
-      "name": "promgrafonnet",
       "source": {
         "git": {
           "remote": "https://github.com/kubernetes-monitoring/kubernetes-mixin",
           "subdir": "lib/promgrafonnet"
         }
       },
-      "version": "a7ee9d1abe1b1a3670a02ede1135cadb660b9d0c",
+      "version": "3cc34f995c31ed6e1e92024fed1912d63569c39f",
       "sum": "VhgBM39yv0f4bKv8VfGg4FXkg573evGDRalip9ypKbc="
     },
     {
-      "name": "slo-libsonnet",
       "source": {
         "git": {
-          "remote": "https://github.com/metalmatze/slo-libsonnet",
-          "subdir": "slo-libsonnet"
+          "remote": "https://github.com/kubernetes/kube-state-metrics",
+          "subdir": "jsonnet/kube-state-metrics"
         }
       },
-      "version": "437c402c5f3ad86c3c16db8471f1649284fef0ee",
-      "sum": "2Zcyku1f558VrUpMaJnI78fahDksPLcS1idmxxwcQ7Q="
+      "version": "52fe3a268bd78c8f32a03361e28fdf23c41512c5",
+      "sum": "cJjGZaLBjcIGrLHZLjRPU9c3KL+ep9rZTb9dbALSKqA="
+    },
+    {
+      "source": {
+        "git": {
+          "remote": "https://github.com/kubernetes/kube-state-metrics",
+          "subdir": "jsonnet/kube-state-metrics-mixin"
+        }
+      },
+      "version": "52fe3a268bd78c8f32a03361e28fdf23c41512c5",
+      "sum": "E1GGavnf9PCWBm4WVrxWnc0FIj72UcbcweqGioWrOdU="
+    },
+    {
+      "source": {
+        "git": {
+          "remote": "https://github.com/prometheus/node_exporter",
+          "subdir": "docs/node-mixin"
+        }
+      },
+      "version": "d4d2e1db98152ab6c94dc9a12a997950e0be2416",
+      "sum": "ZwrC0+4o1xD6+oPBu1p+rBXLlf6pMBD9rT8ygyl2aW0="
+    },
+    {
+      "source": {
+        "git": {
+          "remote": "https://github.com/prometheus/prometheus",
+          "subdir": "documentation/prometheus-mixin"
+        }
+      },
+      "version": "209d4bb8a1491f4535cc6d991681e7dc03bb1d56",
+      "sum": "kRb3XBTe/AALDcaTFfyuiKqzhxtLvihBkVkvJ5cUd/I=",
+      "name": "prometheus"
+    },
+    {
+      "source": {
+        "local": {
+          "directory": "jsonnet/kube-prometheus"
+        }
+      },
+      "version": ""
     }
-  ]
+  ],
+  "legacyImports": false
 }
